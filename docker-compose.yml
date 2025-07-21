@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mine-network
+
+  db:
+    image: mysql:8.0
+    container_name: mine-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: minedata
+      MYSQL_USER: miner
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - minedata:/var/lib/mysql
+    networks:
+      - mine-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  minedata:
+
+networks:
+  mine-network:
+    driver: bridge
